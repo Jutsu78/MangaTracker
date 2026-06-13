@@ -10,5 +10,26 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+}
+
+model Series {
+  id           Int      @id @default(autoincrement())
+  title        String
+  author       String?
+  totalVolumes Int?
+  status       String   @default("ONGOING") 
+  volumes      Volume[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Volume {
+  id          Int      @id @default(autoincrement())
+  number      Int
+  status      String   @default("WISHLIST") 
+  purchaseUrl String?
+  seriesId    Int
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
