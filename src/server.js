@@ -24,6 +24,33 @@ app.get('/api/manga', async (req, res) => {
     }
 });
 
+// GET: Recieves manga series by id
+app.get('/api/manga/:id', async (req, res) => {
+    try{
+        const mangaId = parseInt(req.params.id);
+
+        const series = await prisma.series.findUnique({
+            where: { 
+                id: mangaId
+             }
+        
+        });
+    
+        if (!series) {
+            return res.status(404).json({
+                status: 'error',
+                message: `Manga series with id ${mangaId} not found`
+            })
+        }
+
+        res.status(200).json({ status: 'ok', data: series });
+    } catch (error) {
+    console.error('Error during fetching manga series with id ${req.params.id}:', error);
+    res.status(500).json({ status: 'error', error: "Internal Server Error" });
+
+    }
+});
+
 // POST: Adding a new manga series to the db
 app.post('/api/manga', async (req, res) => {
     try {
