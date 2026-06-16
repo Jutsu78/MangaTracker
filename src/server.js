@@ -134,6 +134,38 @@ app.post('/api/manga', async (req, res) => {
     }
 });
 
+ // POST: Adding a new volume to specific manga series
+ app.post('/api/manga/:id/volumes', async (req, res) => {
+    try {
+        const seriesId = parseInt(req.params.id);
+        const { number, status } = req.body;
+        
+
+        const existingSeries = await prisma.series.findUnique({
+            where: { id: seriesId }
+        });
+        if (!existingSeries) {
+            return res.status(404).json({
+                status: 'error',
+                message: `Cannot add volume. Manga series with id ${seriesId} not found`
+            });
+        }
+        const newVolume = await prisma.volume.create({
+            data: {
+                number,
+                status,
+                seriesId
+            }
+        });
+
+        res.status(201).json({ status: 'ok', data: newVolume });
+    } catch (error) {
+        console.error(`Error during adding volume to manga series with id ${req.params.id}:`, error);
+        res.status(500).json({ status: 'error', error: "Internal Server Error" });
+
+    }
+ });
+
     app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
