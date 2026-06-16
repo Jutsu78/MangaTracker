@@ -138,7 +138,7 @@ app.post('/api/manga', async (req, res) => {
  app.post('/api/manga/:id/volumes', async (req, res) => {
     try {
         const seriesId = parseInt(req.params.id);
-        const { number, status } = req.body;
+        const { number, status, purchaseUrl } = req.body;
         
 
         const existingSeries = await prisma.series.findUnique({
@@ -154,6 +154,7 @@ app.post('/api/manga', async (req, res) => {
             data: {
                 number,
                 status,
+                purchaseUrl,
                 seriesId
             }
         });
@@ -189,6 +190,38 @@ app.get('/api/manga/:id/volumes', async (req, res) => {
         res.status(200).json({ status: 'ok', data: volumes });
     } catch (error) {
         console.error(`Error during fetching volumes for series ${req.params.id}:`, error);
+        res.status(500).json({ status: 'error', error: "Internal Server Error" });
+    }
+});
+
+// PUT: Update a specific volume by its own ID
+app.put('/api/volumes/:id', async (req, res) => {
+    try {
+        const volumeId = parseInt(req.params.id);
+        const { number, status, purchaseUrl } = req.body;
+        const existingVolume = await prisma.volume.findUnique({
+            where: { id: volumeId }
+        });
+
+        if (!existingVolume) {
+            return res.status(404).json({ 
+                status: 'error', 
+                message: `Cannot update. Volume with id ${volumeId} not found` 
+            });
+        }
+
+        const updatedVolume = await prisma.volume.update({
+            where: { id: volumeId },
+            data: {
+                number,
+                status,
+                purchaseUrl
+            }
+        });
+
+        res.status(200).json({ status: 'ok', data: updatedVolume });
+    } catch (error) {
+        console.error(`Error during updating volume with id ${req.params.id}:`, error);
         res.status(500).json({ status: 'error', error: "Internal Server Error" });
     }
 });
