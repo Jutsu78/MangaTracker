@@ -252,6 +252,43 @@ app.delete('/api/volumes/:id', async (req, res) => {
     }
 });
 
+// GET: progress indicator
+app.get('/api/manga/:id', async (req, res) => {
+    try{
+        const mangaId = parseInt(req.params.id);
+
+        const series = await prisma.series.findUnique({
+            where: { 
+                id: mangaId
+            }
+        });
+        
+        if (!series) {
+            return res.status(404).json({
+                status: 'error',
+                message: `Manga series with id ${mangaId} not found`
+            });
+        }
+          const ownedVolumesCount = await prisma.volume.count({
+            where: {
+                seriesId: mangaId,
+                status: 'owned'
+            }
+        });
+        
+        const progressIndicator = `${ownedVolumesCount}/${series.totalVolumes}`;
+
+        const seriesWithProgress = {
+            ...series,
+            progressIndicator
+        };
+        res.status(200).json({ status: 'ok', data: seriesWithProgress });
+    } catch (error) {
+        console.error(`Error during fetching manga progress for id ${req.params.id}:`, error);
+        res.status(500).json({ status: 'error', error: "Internal Server Error" });
+    }
+});
+
     app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
