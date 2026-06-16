@@ -24,36 +24,9 @@ app.get('/api/manga', async (req, res) => {
     }
 });
 
-// GET: Recieves manga series by id
-app.get('/api/manga/:id', async (req, res) => {
-    try{
-        const mangaId = parseInt(req.params.id);
-
-        const series = await prisma.series.findUnique({
-            where: { 
-                id: mangaId
-             }
-        
-        });
-    
-        if (!series) {
-            return res.status(404).json({
-                status: 'error',
-                message: `Manga series with id ${mangaId} not found`
-            })
-        }
-
-        res.status(200).json({ status: 'ok', data: series });
-    } catch (error) {
-    console.error('Error during fetching manga series with id ${req.params.id}:', error);
-    res.status(500).json({ status: 'error', error: "Internal Server Error" });
-
-    }
-});
-
 // PUT: Updating a manga series
 app.put('/api/manga/:id', async (req, res) => {
-    try{
+    try {
         const mangaId = parseInt(req.params.id);
         const { title, author, totalVolumes, status } = req.body;
 
@@ -94,18 +67,18 @@ app.delete('/api/manga/:id', async (req, res) => {
         });
 
         if (!existingSeries) {
-            return res.status(404).json({ 
-                status: 'error', 
-                message: `Cannot delete. Manga series with id ${mangaId} not found` 
+            return res.status(404).json({
+                status: 'error',
+                message: `Cannot delete. Manga series with id ${mangaId} not found`
             });
         }
         await prisma.series.delete({
             where: { id: mangaId }
         });
 
-        res.status(200).json({ 
-            status: 'ok', 
-            message: `Manga series with id ${mangaId} was successfully deleted` 
+        res.status(200).json({
+            status: 'ok',
+            message: `Manga series with id ${mangaId} was successfully deleted`
         });
     } catch (error) {
         console.error(`Error during deleting manga series with id ${req.params.id}:`, error);
@@ -134,12 +107,12 @@ app.post('/api/manga', async (req, res) => {
     }
 });
 
- // POST: Adding a new volume to specific manga series
- app.post('/api/manga/:id/volumes', async (req, res) => {
+// POST: Adding a new volume to specific manga series
+app.post('/api/manga/:id/volumes', async (req, res) => {
     try {
         const seriesId = parseInt(req.params.id);
         const { number, status, purchaseUrl } = req.body;
-        
+
 
         const existingSeries = await prisma.series.findUnique({
             where: { id: seriesId }
@@ -165,9 +138,9 @@ app.post('/api/manga', async (req, res) => {
         res.status(500).json({ status: 'error', error: "Internal Server Error" });
 
     }
- });
+});
 
- // GET: Retrieve all volumes for a specific manga series
+// GET: Retrieve all volumes for a specific manga series
 app.get('/api/manga/:id/volumes', async (req, res) => {
     try {
         const seriesId = parseInt(req.params.id);
@@ -176,15 +149,15 @@ app.get('/api/manga/:id/volumes', async (req, res) => {
         });
 
         if (!existingSeries) {
-            return res.status(404).json({ 
-                status: 'error', 
-                message: `Manga series with id ${seriesId} not found` 
+            return res.status(404).json({
+                status: 'error',
+                message: `Manga series with id ${seriesId} not found`
             });
         }
 
         const volumes = await prisma.volume.findMany({
             where: { seriesId: seriesId },
-            orderBy: { number: 'asc' } 
+            orderBy: { number: 'asc' }
         });
 
         res.status(200).json({ status: 'ok', data: volumes });
@@ -204,9 +177,9 @@ app.put('/api/volumes/:id', async (req, res) => {
         });
 
         if (!existingVolume) {
-            return res.status(404).json({ 
-                status: 'error', 
-                message: `Cannot update. Volume with id ${volumeId} not found` 
+            return res.status(404).json({
+                status: 'error',
+                message: `Cannot update. Volume with id ${volumeId} not found`
             });
         }
 
@@ -235,9 +208,9 @@ app.delete('/api/volumes/:id', async (req, res) => {
         });
 
         if (!existingVolume) {
-            return res.status(404).json({ 
-                status: 'error', 
-                message: `Cannot delete. Volume with id ${volumeId} not found` 
+            return res.status(404).json({
+                status: 'error',
+                message: `Cannot delete. Volume with id ${volumeId} not found`
             });
         }
 
@@ -254,34 +227,35 @@ app.delete('/api/volumes/:id', async (req, res) => {
 
 // GET: progress indicator
 app.get('/api/manga/:id', async (req, res) => {
-    try{
+    try {
         const mangaId = parseInt(req.params.id);
 
         const series = await prisma.series.findUnique({
-            where: { 
+            where: {
                 id: mangaId
             }
         });
-        
+
         if (!series) {
             return res.status(404).json({
                 status: 'error',
                 message: `Manga series with id ${mangaId} not found`
             });
         }
-          const ownedVolumesCount = await prisma.volume.count({
+        const ownedVolumesCount = await prisma.volume.count({
             where: {
                 seriesId: mangaId,
-                status: 'owned'
+                status: 'OWNED'
             }
         });
-        
+
         const progressIndicator = `${ownedVolumesCount}/${series.totalVolumes}`;
 
         const seriesWithProgress = {
             ...series,
-            progressIndicator
+            progress: progressIndicator
         };
+
         res.status(200).json({ status: 'ok', data: seriesWithProgress });
     } catch (error) {
         console.error(`Error during fetching manga progress for id ${req.params.id}:`, error);
@@ -289,6 +263,6 @@ app.get('/api/manga/:id', async (req, res) => {
     }
 });
 
-    app.listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
