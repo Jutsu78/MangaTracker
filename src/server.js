@@ -166,6 +166,33 @@ app.post('/api/manga', async (req, res) => {
     }
  });
 
+ // GET: Retrieve all volumes for a specific manga series
+app.get('/api/manga/:id/volumes', async (req, res) => {
+    try {
+        const seriesId = parseInt(req.params.id);
+        const existingSeries = await prisma.series.findUnique({
+            where: { id: seriesId }
+        });
+
+        if (!existingSeries) {
+            return res.status(404).json({ 
+                status: 'error', 
+                message: `Manga series with id ${seriesId} not found` 
+            });
+        }
+
+        const volumes = await prisma.volume.findMany({
+            where: { seriesId: seriesId },
+            orderBy: { number: 'asc' } 
+        });
+
+        res.status(200).json({ status: 'ok', data: volumes });
+    } catch (error) {
+        console.error(`Error during fetching volumes for series ${req.params.id}:`, error);
+        res.status(500).json({ status: 'error', error: "Internal Server Error" });
+    }
+});
+
     app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
