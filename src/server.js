@@ -226,6 +226,32 @@ app.put('/api/volumes/:id', async (req, res) => {
     }
 });
 
+// DELETE: Deleteing a specific volume 
+app.delete('/api/volumes/:id', async (req, res) => {
+    try {
+        const volumeId = parseInt(req.params.id);
+        const existingVolume = await prisma.volume.findUnique({
+            where: { id: volumeId }
+        });
+
+        if (!existingVolume) {
+            return res.status(404).json({ 
+                status: 'error', 
+                message: `Cannot delete. Volume with id ${volumeId} not found` 
+            });
+        }
+
+        await prisma.volume.delete({
+            where: { id: volumeId }
+        });
+
+        res.status(200).json({ status: 'ok', message: 'Volume deleted successfully' });
+    } catch (error) {
+        console.error(`Error during deleting volume with id ${req.params.id}:`, error);
+        res.status(500).json({ status: 'error', error: "Internal Server Error" });
+    }
+});
+
     app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
