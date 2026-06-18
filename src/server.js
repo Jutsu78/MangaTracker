@@ -16,68 +16,6 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// PUT: Updating a manga series
-app.put('/api/manga/:id', async (req, res) => {
-    try {
-        const mangaId = parseInt(req.params.id);
-        const { title, author, totalVolumes, status } = req.body;
-
-        const existingSeries = await prisma.series.findUnique({
-            where: { id: mangaId }
-        });
-        if (!existingSeries) {
-            return res.status(404).json({
-                status: 'error',
-                message: `Cannot update manga series with id ${mangaId} not found`
-            });
-        }
-
-        const updatedSeries = await prisma.series.update({
-            where: { id: mangaId },
-            data: {
-                title,
-                author,
-                totalVolumes,
-                status
-            }
-        });
-
-        res.status(200).json({ status: 'ok', data: updatedSeries });
-    } catch (error) {
-        console.error('Error during updating manga series with id ${req.params.id}:', error);
-        res.status(500).json({ status: 'error', error: "Internal Server Error" });
-    }
-});
-
-// DELETE: Delete a manga series
-app.delete('/api/manga/:id', async (req, res) => {
-    try {
-        const mangaId = parseInt(req.params.id);
-
-        const existingSeries = await prisma.series.findUnique({
-            where: { id: mangaId }
-        });
-
-        if (!existingSeries) {
-            return res.status(404).json({
-                status: 'error',
-                message: `Cannot delete. Manga series with id ${mangaId} not found`
-            });
-        }
-        await prisma.series.delete({
-            where: { id: mangaId }
-        });
-
-        res.status(200).json({
-            status: 'ok',
-            message: `Manga series with id ${mangaId} was successfully deleted`
-        });
-    } catch (error) {
-        console.error(`Error during deleting manga series with id ${req.params.id}:`, error);
-        res.status(500).json({ status: 'error', error: "Internal Server Error" });
-    }
-});
-
 // POST: Adding a new volume to specific manga series
 app.post('/api/manga/:id/volumes', async (req, res) => {
     try {
@@ -192,44 +130,6 @@ app.delete('/api/volumes/:id', async (req, res) => {
         res.status(200).json({ status: 'ok', message: 'Volume deleted successfully' });
     } catch (error) {
         console.error(`Error during deleting volume with id ${req.params.id}:`, error);
-        res.status(500).json({ status: 'error', error: "Internal Server Error" });
-    }
-});
-
-// GET: progress indicator
-app.get('/api/manga/:id', async (req, res) => {
-    try {
-        const mangaId = parseInt(req.params.id);
-
-        const series = await prisma.series.findUnique({
-            where: {
-                id: mangaId
-            }
-        });
-
-        if (!series) {
-            return res.status(404).json({
-                status: 'error',
-                message: `Manga series with id ${mangaId} not found`
-            });
-        }
-        const ownedVolumesCount = await prisma.volume.count({
-            where: {
-                seriesId: mangaId,
-                status: 'OWNED'
-            }
-        });
-
-        const progressIndicator = `${ownedVolumesCount}/${series.totalVolumes}`;
-
-        const seriesWithProgress = {
-            ...series,
-            progress: progressIndicator
-        };
-
-        res.status(200).json({ status: 'ok', data: seriesWithProgress });
-    } catch (error) {
-        console.error(`Error during fetching manga progress for id ${req.params.id}:`, error);
         res.status(500).json({ status: 'error', error: "Internal Server Error" });
     }
 });
