@@ -31,6 +31,41 @@ const createManga = async (req, res) => {
     }
 };
 
+// GET: getting a manga series by id with progress indicator
+const getMangaById = async (req, res) => {
+    try {
+        const mangaId = parseInt(req.params.id);
+        const series = await prisma.series.findUnique({
+            where: { id: mangaId }
+        });
+
+        if (!series) {
+            return res.status(404).json({ 
+                status: 'error', 
+                message: `Manga series with id ${mangaId} not found` 
+            });
+        }
+
+        const ownedVolumesCount = await prisma.volume.count({
+            where: {
+                seriesId: mangaId,
+                status: 'OWNED'
+            }
+        });
+
+        const progressIndicator = `${ownedVolumesCount}/${series.totalVolumes}`;
+        const seriesWithProgress = {
+            ...series,
+            progress: progressIndicator
+        };
+
+        res.status(200).json({ status: 'ok', data: seriesWithProgress });
+    } catch (error) {
+        console.error(`Error during fetching manga progress for id ${req.params.id}:`, error);
+        res.status(500).json({ status: 'error', error: "Internal Server Error" });
+    }
+};
+
 module.exports = {
     getAllManga,
     createManga
