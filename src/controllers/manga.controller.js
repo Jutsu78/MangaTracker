@@ -66,6 +66,34 @@ const getMangaById = async (req, res) => {
     }
 };
 
+// PUT: update
+const updateManga = async (req, res) => {
+    try {
+        const mangaId = parseInt(req.params.id);
+        const { title, author, totalVolumes, status } = req.body;
+
+        const existingSeries = await prisma.series.findUnique({
+            where: { id: mangaId }
+        });
+        if (!existingSeries) {
+            return res.status(404).json({
+                status: 'error',
+                message: `Cannot update. Manga series with id ${mangaId} not found`
+            });
+        }
+
+        const updatedSeries = await prisma.series.update({
+            where: { id: mangaId },
+            data: { title, author, totalVolumes, status }
+        });
+
+        res.status(200).json({ status: 'ok', data: updatedSeries });
+    } catch (error) {
+        console.error(`Error during updating manga series with id ${req.params.id}:`, error);
+        res.status(500).json({ status: 'error', error: "Internal Server Error" });
+    }
+};
+
 module.exports = {
     getAllManga,
     createManga
