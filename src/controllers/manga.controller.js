@@ -94,7 +94,38 @@ const updateManga = async (req, res) => {
     }
 };
 
+// DELETE: delete
+const deleteManga = async (req, res) => {
+    try {
+        const mangaId = parseInt(req.params.id);
+
+        const existingSeries = await prisma.series.findUnique({
+            where: { id: mangaId }
+        });
+
+        if (!existingSeries) {
+            return res.status(404).json({
+                status: 'error',
+                message: `Cannot delete. Manga series with id ${mangaId} not found`
+            });
+        }
+        await prisma.series.delete({
+            where: { id: mangaId }
+        });
+
+        res.status(200).json({
+            status: 'ok',
+            message: `Manga series with id ${mangaId} was successfully deleted`
+        });
+    } catch (error) {
+        console.error(`Error during deleting manga series with id ${req.params.id}:`, error);
+        res.status(500).json({ status: 'error', error: "Internal Server Error" });
+    }
+};
 module.exports = {
     getAllManga,
-    createManga
+    createManga,
+    getMangaById,
+    updateManga,
+    deleteManga
 };
