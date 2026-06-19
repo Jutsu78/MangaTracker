@@ -1,5 +1,6 @@
 
 const prisma = require('../db');
+const { createMangaSchema } = require('../validations/manga.validation');
 
 const getAllManga = async (req, res) => {
     try {
@@ -40,18 +41,22 @@ const getAllManga = async (req, res) => {
 
 const createManga = async (req, res) => {
     try {
-        const { title, author, totalVolumes, status } = req.body;
+        const validatedData = createMangaSchema.parse(req.body);
+        
         const newSeries = await prisma.series.create({
-            data: {
-                title,
-                author,
-                totalVolumes,
-                status
-            }
+            data: validatedData 
         });
-
+        
         res.status(201).json({ status: 'ok', data: newSeries });
     } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ 
+                status: 'error', 
+                message: 'Validation error', 
+                errors: error.flatten().fieldErrors
+            });
+        }
+
         console.error('Error during creating manga series:', error);
         res.status(500).json({ status: 'error', error: "Internal Server Error" });
     }
