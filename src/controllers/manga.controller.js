@@ -3,8 +3,35 @@ const prisma = require('../db');
 
 const getAllManga = async (req, res) => {
     try {
-        const series = await prisma.series.findMany();
-        res.status(200).json({ status: 'ok', data: series });
+        const { page = 1, limit = 10, status } = req.query;
+
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const whereClause = {};
+        if (status) {
+            whereClause.status = status;
+        }
+
+        const series = await prisma.series.findMany({
+            where: whereClause,
+            skip: skip,
+            take: limitNumber,
+        });
+
+        const totalRecords = await prisma.series.count({ where: whereClause });
+
+        res.status(200).json({ 
+            status: 'ok', 
+            data: series,
+            meta: {
+                total: totalRecords,
+                page: pageNumber,
+                limit: limitNumber,
+                totalPages: Math.ceil(totalRecords / limitNumber)
+            }
+        });
     } catch (error) {
         console.error('Error during fetching manga series:', error);
         res.status(500).json({ status: 'error', error: "Internal Server Error" });
@@ -14,7 +41,6 @@ const getAllManga = async (req, res) => {
 const createManga = async (req, res) => {
     try {
         const { title, author, totalVolumes, status } = req.body;
-
         const newSeries = await prisma.series.create({
             data: {
                 title,
