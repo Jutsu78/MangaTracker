@@ -7,10 +7,10 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 const mangaRoutes = require('./routes/manga.routes');
-const volumeRoutes = require('./routes/volume.routes'); 
+const volumeRoutes = require('./routes/volume.routes');
 
 app.use('/api/manga', mangaRoutes);
-app.use('/api/volumes', volumeRoutes); 
+app.use('/api/volumes', volumeRoutes);
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({

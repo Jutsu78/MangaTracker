@@ -14,7 +14,7 @@ const getAllManga = async (req, res) => {
 const createManga = async (req, res) => {
     try {
         const { title, author, totalVolumes, status } = req.body;
-        
+
         const newSeries = await prisma.series.create({
             data: {
                 title,
@@ -23,7 +23,7 @@ const createManga = async (req, res) => {
                 status
             }
         });
-        
+
         res.status(201).json({ status: 'ok', data: newSeries });
     } catch (error) {
         console.error('Error during creating manga series:', error);
@@ -40,9 +40,9 @@ const getMangaById = async (req, res) => {
         });
 
         if (!series) {
-            return res.status(404).json({ 
-                status: 'error', 
-                message: `Manga series with id ${mangaId} not found` 
+            return res.status(404).json({
+                status: 'error',
+                message: `Manga series with id ${mangaId} not found`
             });
         }
 
