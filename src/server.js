@@ -20,6 +20,9 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+const errorHandler = require('./middlewares/errorHandler');
+app.use(errorHandler);
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
