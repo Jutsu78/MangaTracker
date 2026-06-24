@@ -6,6 +6,7 @@ const volumeController = require('../controllers/volume.controller');
 
 router.get('/', mangaController.getAllManga);
 router.post('/', mangaController.createManga);
+router.post('/autofetch', mangaController.autoFetch);
 router.get('/:id', mangaController.getMangaById);
 router.put('/:id', mangaController.updateManga);
 router.delete('/:id', mangaController.deleteManga);
