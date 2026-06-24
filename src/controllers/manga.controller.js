@@ -45,11 +45,16 @@ const createManga = asyncHandler(async (req, res) => {
     res.status(201).json({ status: 'ok', data: newSeries });
 });
 
-// GET: getting a manga series by id with progress indicator
+// GET: getting a manga series by id with progress indicator and volumes
 const getMangaById = asyncHandler(async (req, res) => {
     const mangaId = parseInt(req.params.id);
     const series = await prisma.series.findUnique({
-        where: { id: mangaId }
+        where: { id: mangaId },
+        include: {
+            volumes: {
+                orderBy: { number: 'asc' }
+            }
+        }
     });
 
     if (!series) {
@@ -59,20 +64,15 @@ const getMangaById = asyncHandler(async (req, res) => {
         });
     }
 
-    const ownedVolumesCount = await prisma.volume.count({
-        where: {
-            seriesId: mangaId,
-            status: 'OWNED'
-        }
-    });
-
+    const ownedVolumesCount = series.volumes.filter(vol => vol.status === 'OWNED').length;
     const progressIndicator = `${ownedVolumesCount}/${series.totalVolumes}`;
-    const seriesWithProgress = {
+
+    const seriesWithDetails = {
         ...series,
         progress: progressIndicator
     };
 
-    res.status(200).json({ status: 'ok', data: seriesWithProgress });
+    res.status(200).json({ status: 'ok', data: seriesWithDetails });
 });
 
 // PUT: update
