@@ -1,27 +1,24 @@
 
 const prisma = require('../db');
 const asyncHandler = require('../middlewares/asyncHandler');
+const { volumeSchema } = require('../validations/volume.validation');
 
 const createVolume = asyncHandler(async (req, res) => {
     const seriesId = parseInt(req.params.id);
-    const { number, status, purchaseUrl } = req.body;
-
+    const validatedData = volumeSchema.parse(req.body);
     const existingSeries = await prisma.series.findUnique({
         where: { id: seriesId }
     });
-
+    
     if (!existingSeries) {
         return res.status(404).json({
             status: 'error',
             message: `Cannot add volume. Manga series with id ${seriesId} not found`
         });
     }
-
     const newVolume = await prisma.volume.create({
         data: {
-            number,
-            status,
-            purchaseUrl,
+            ...validatedData,
             seriesId
         }
     });
@@ -52,8 +49,7 @@ const getVolumesByMangaId = asyncHandler(async (req, res) => {
 
 const updateVolume = asyncHandler(async (req, res) => {
     const volumeId = parseInt(req.params.id);
-    const { number, status, purchaseUrl } = req.body;
-
+    const validatedData = volumeSchema.parse(req.body);
     const existingVolume = await prisma.volume.findUnique({
         where: { id: volumeId }
     });
@@ -64,14 +60,9 @@ const updateVolume = asyncHandler(async (req, res) => {
             message: `Cannot update. Volume with id ${volumeId} not found`
         });
     }
-
     const updatedVolume = await prisma.volume.update({
         where: { id: volumeId },
-        data: {
-            number,
-            status,
-            purchaseUrl
-        }
+        data: validatedData
     });
 
     res.status(200).json({ status: 'ok', data: updatedVolume });
