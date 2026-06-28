@@ -11,12 +11,25 @@ datasource db {
   provider = "sqlite"
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   
+  series    Series[] 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Series {
   id           Int      @id @default(autoincrement())
   title        String
-  author       String?
-  totalVolumes Int?
-  status       String   @default("ONGOING") 
+  author       String
+  totalVolumes Int
+  status       String
+  
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+
   volumes      Volume[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -25,7 +38,7 @@ model Series {
 model Volume {
   id          Int      @id @default(autoincrement())
   number      Int
-  status      String   @default("WISHLIST") 
+  status      String
   purchaseUrl String?
   seriesId    Int
   series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
