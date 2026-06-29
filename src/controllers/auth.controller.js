@@ -1,0 +1,34 @@
+
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const prisma = require('../db');
+const asyncHandler = require('../middlewares/asyncHandler');
+
+const register = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ status: 'error', message: 'Email and password are required' });
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+        return res.status(400).json({ status: 'error', message: 'User already exists' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = await prisma.user.create({
+        data: {
+            email,
+            password: hashedPassword,
+        }
+    });
+
+    res.status(201).json({
+        status: 'ok',
+        message: 'User registered successfully',
+        data: {id: newUser.id, email: newUser.email}
+    });
+});
