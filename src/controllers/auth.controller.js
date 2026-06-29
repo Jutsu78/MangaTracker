@@ -29,6 +29,36 @@ const register = asyncHandler(async (req, res) => {
     res.status(201).json({
         status: 'ok',
         message: 'User registered successfully',
-        data: {id: newUser.id, email: newUser.email}
+        data: { id: newUser.id, email: newUser.email }
     });
 });
+
+const login = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ status: 'error', message: 'Email and password are required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+        return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+        return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    res.status(200).json({
+        status: 'ok',
+        message: 'Login successful',
+        token
+    });
+});
+
+module.exports = {
+    register,
+    login
+};
