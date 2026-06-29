@@ -8,9 +8,11 @@ app.use(express.json());
 
 const mangaRoutes = require('./routes/manga.routes');
 const volumeRoutes = require('./routes/volume.routes');
+const authRoutes = require('./routes/auth.routes');
 
 app.use('/api/manga', mangaRoutes);
 app.use('/api/volumes', volumeRoutes);
+app.use('/api/auth', authRoutes);
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({
