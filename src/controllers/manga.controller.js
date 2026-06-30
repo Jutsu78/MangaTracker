@@ -88,7 +88,8 @@ const autoFetch = asyncHandler(async (req, res) => {
             title: fetchedTitle,
             author: fetchedAuthor,
             totalVolumes: fetchedVolumes,
-            status: fetchedStatus
+            status: fetchedStatus,
+            userId: req.user.id
         }
     });
 
