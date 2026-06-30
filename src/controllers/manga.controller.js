@@ -103,51 +103,41 @@ const autoFetch = asyncHandler(async (req, res) => {
 // GET: getting a manga series by id with progress indicator and volumes
 const getMangaById = asyncHandler(async (req, res) => {
     const mangaId = parseInt(req.params.id);
-    const series = await prisma.series.findUnique({
-        where: { id: mangaId },
-        include: {
-            volumes: {
-                orderBy: { number: 'asc' }
-            }
+
+    const series = await prisma.series.findFirst({
+        where: {
+            id: mangaId,
+            userId: req.user.id 
         }
     });
 
     if (!series) {
-        return res.status(404).json({
-            status: 'error',
-            message: `Manga series with id ${mangaId} not found`
+        return res.status(404).json({ 
+            status: 'error', 
+            message: 'Manga not found or you do not have permission to view it' 
         });
     }
 
-    const ownedVolumesCount = series.volumes.filter(vol => vol.status === 'OWNED').length;
-    const progressIndicator = `${ownedVolumesCount}/${series.totalVolumes}`;
-
-    const seriesWithDetails = {
-        ...series,
-        progress: progressIndicator
-    };
-
-    res.status(200).json({ status: 'ok', data: seriesWithDetails });
+    res.status(200).json({ status: 'ok', data: series });
 });
 
 // PUT: update
 const updateManga = asyncHandler(async (req, res) => {
     const mangaId = parseInt(req.params.id);
-    const { title, author, totalVolumes, status } = req.body;
-
-    const existingSeries = await prisma.series.findUnique({
-        where: { id: mangaId }
+    const existingSeries = await prisma.series.findFirst({
+        where: { id: mangaId, userId: req.user.id }
     });
+
     if (!existingSeries) {
-        return res.status(404).json({
-            status: 'error',
-            message: `Cannot update. Manga series with id ${mangaId} not found`
+        return res.status(404).json({ 
+            status: 'error', 
+            message: 'Manga not found or you do not have permission to update it' 
         });
     }
 
     const updatedSeries = await prisma.series.update({
         where: { id: mangaId },
-        data: { title, author, totalVolumes, status }
+        data: req.body 
     });
 
     res.status(200).json({ status: 'ok', data: updatedSeries });
@@ -156,24 +146,23 @@ const updateManga = asyncHandler(async (req, res) => {
 // DELETE: delete
 const deleteManga = asyncHandler(async (req, res) => {
     const mangaId = parseInt(req.params.id);
-
-    const existingSeries = await prisma.series.findUnique({
-        where: { id: mangaId }
+    const existingSeries = await prisma.series.findFirst({
+        where: { id: mangaId, userId: req.user.id }
     });
 
     if (!existingSeries) {
-        return res.status(404).json({
-            status: 'error',
-            message: `Cannot delete. Manga series with id ${mangaId} not found`
+        return res.status(404).json({ 
+            status: 'error', 
+            message: 'Manga not found or you do not have permission to delete it' 
         });
     }
     await prisma.series.delete({
         where: { id: mangaId }
     });
 
-    res.status(200).json({
-        status: 'ok',
-        message: `Manga series with id ${mangaId} was successfully deleted`
+    res.status(200).json({ 
+        status: 'ok', 
+        message: 'Manga deleted successfully' 
     });
 });
 
