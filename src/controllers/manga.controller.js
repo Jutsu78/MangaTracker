@@ -10,7 +10,7 @@ const getAllManga = asyncHandler(async (req, res) => {
     const limitNumber = parseInt(limit);
     const skip = (pageNumber - 1) * limitNumber;
 
-    const whereClause = {};
+    const whereClause = { userId: req.user.id };
     if (status) {
         whereClause.status = status;
     }
