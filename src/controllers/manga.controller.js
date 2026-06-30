@@ -36,13 +36,16 @@ const getAllManga = asyncHandler(async (req, res) => {
 });
 
 const createManga = asyncHandler(async (req, res) => {
-    const validatedData = createMangaSchema.parse(req.body);
+    const validatedData = mangaSchema.parse(req.body);
 
-    const newSeries = await prisma.series.create({
-        data: validatedData
+    const newManga = await prisma.series.create({
+        data: {
+            ...validatedData,
+            userId: req.user.id 
+        }
     });
 
-    res.status(201).json({ status: 'ok', data: newSeries });
+    res.status(201).json({ status: 'ok', data: newManga });
 });
 
 // POST: manga auto fetching from MyAnimeList API
