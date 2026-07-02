@@ -6,16 +6,21 @@ const { volumeSchema } = require('../validations/volume.validation');
 const createVolume = asyncHandler(async (req, res) => {
     const seriesId = parseInt(req.params.id);
     const validatedData = volumeSchema.parse(req.body);
-    const existingSeries = await prisma.series.findUnique({
-        where: { id: seriesId }
+    
+    const existingSeries = await prisma.series.findFirst({
+        where: { 
+            id: seriesId,
+            userId: req.user.id
+        }
     });
     
     if (!existingSeries) {
         return res.status(404).json({
             status: 'error',
-            message: `Cannot add volume. Manga series with id ${seriesId} not found`
+            message: `Cannot add volume. Manga series with id ${seriesId} not found or access denied`
         });
     }
+    
     const newVolume = await prisma.volume.create({
         data: {
             ...validatedData,
@@ -28,14 +33,18 @@ const createVolume = asyncHandler(async (req, res) => {
 
 const getVolumesByMangaId = asyncHandler(async (req, res) => {
     const seriesId = parseInt(req.params.id);
-    const existingSeries = await prisma.series.findUnique({
-        where: { id: seriesId }
+    
+    const existingSeries = await prisma.series.findFirst({
+        where: { 
+            id: seriesId,
+            userId: req.user.id
+        }
     });
 
     if (!existingSeries) {
         return res.status(404).json({
             status: 'error',
-            message: `Manga series with id ${seriesId} not found`
+            message: `Manga series with id ${seriesId} not found or access denied`
         });
     }
 
@@ -50,16 +59,23 @@ const getVolumesByMangaId = asyncHandler(async (req, res) => {
 const updateVolume = asyncHandler(async (req, res) => {
     const volumeId = parseInt(req.params.id);
     const validatedData = volumeSchema.parse(req.body);
-    const existingVolume = await prisma.volume.findUnique({
-        where: { id: volumeId }
+    
+    const existingVolume = await prisma.volume.findFirst({
+        where: { 
+            id: volumeId,
+            series: {
+                userId: req.user.id
+            }
+        }
     });
 
     if (!existingVolume) {
         return res.status(404).json({
             status: 'error',
-            message: `Cannot update. Volume with id ${volumeId} not found`
+            message: `Cannot update. Volume with id ${volumeId} not found or access denied`
         });
     }
+    
     const updatedVolume = await prisma.volume.update({
         where: { id: volumeId },
         data: validatedData
@@ -71,14 +87,19 @@ const updateVolume = asyncHandler(async (req, res) => {
 const deleteVolume = asyncHandler(async (req, res) => {
     const volumeId = parseInt(req.params.id);
 
-    const existingVolume = await prisma.volume.findUnique({
-        where: { id: volumeId }
+    const existingVolume = await prisma.volume.findFirst({
+        where: { 
+            id: volumeId,
+            series: {
+                userId: req.user.id
+            }
+        }
     });
 
     if (!existingVolume) {
         return res.status(404).json({
             status: 'error',
-            message: `Cannot delete. Volume with id ${volumeId} not found`
+            message: `Cannot delete. Volume with id ${volumeId} not found or access denied`
         });
     }
 
